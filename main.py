@@ -2,7 +2,6 @@
 import pandas as pd
 import aspose.words as aw
 
-
 # Soit on iter sur tous le documents dans l'ordre, soit on utilise les index.
 # Index tableau :
 # 0 = tableau informations demandes = Pas de modif
@@ -39,19 +38,19 @@ def extract_df_from_nested_table(table_to_check_in, row_index):
     if child.count == 1:
         print("Table nested!")
         # Maintenant, il faut récupérer cette table et faire une boucle sur chaque cellule
-        #print(child.count)
+        # print(child.count)
         table_to_df = child[0]
-        #print(table_to_df.rows.count)
-        #print(table_to_df.rows[0].cells.count)
+        # print(table_to_df.rows.count)
+        # print(table_to_df.rows[0].cells.count)
         df = [['' for i in range(table_to_df.rows[0].cells.count)] for j in range(table_to_df.rows.count)]
 
         for y, row in enumerate(table_to_df.rows):
             for j, cell in enumerate(row.as_row().cells):
-                #print(cell.to_string(aw.SaveFormat.TEXT))
+                # print(cell.to_string(aw.SaveFormat.TEXT))
                 df[y][j] = cell.to_string(aw.SaveFormat.TEXT).replace("\r", "")
 
         data = pd.DataFrame(df)
-        #print(data)
+        # print(data)
         return data, True
 
     elif child.count > 1:
@@ -61,6 +60,24 @@ def extract_df_from_nested_table(table_to_check_in, row_index):
         print("pas de table")
         data = pd.DataFrame()
         return data, False
+
+
+def get_items():
+    """
+    Function pour récupérer le tableau d'information sur les items
+    Va permettre de mettre la ref client avec la ref lims pour les essais
+    Le tableau d'items est toujours en position deux
+    :return: df avec le contenu du tableau
+    """
+    table_items = doc.get_child(aw.NodeType.TABLE, 1, True).as_table()
+    df_items = [['' for i in range(table_items.rows[0].cells.count)] for j in range(table_items.rows.count)]
+    for y, row in enumerate(table_items.rows):
+        for j, cell in enumerate(row.as_row().cells):
+            # print(cell.to_string(aw.SaveFormat.TEXT))
+            df_items[y][j] = cell.to_string(aw.SaveFormat.TEXT).replace("\r", "")
+
+    df_items = pd.DataFrame(df_items)
+    return df_items
 
 
 def apply_formatting_to_table(table_to_check_in, row_index):
@@ -74,14 +91,11 @@ def apply_formatting_to_table(table_to_check_in, row_index):
     print('test')
 
 
-
 if __name__ == '__main__':
     doc = aw.Document(".\TestWord\SansMacro.docx")
 
     # toutes les tables directement dans le documents, pas les imbriqué ni dans header
     all_tables = doc.select_nodes("//Body/Table")
-
-
 
     # On récupère les positions des tables d'essais:
     # print("nbr de tableau d'essai : " + str(len(tb) - nbr_tableau_fixe))
@@ -105,8 +119,3 @@ if __name__ == '__main__':
                     # Ici on va faire la mise en forme
                 else:
                     print("rien")
-
-
-
-
-

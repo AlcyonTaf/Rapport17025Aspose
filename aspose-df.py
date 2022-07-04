@@ -49,14 +49,14 @@ def extract_df_from_nested_table(table_to_check_in, row_index):
         table_to_df = child[0]
         # print(table_to_df.rows.count)
         # print(table_to_df.rows[0].cells.count)
-        df = [['' for i in range(table_to_df.rows[0].cells.count)] for j in range(table_to_df.rows.count)]
+        df_nested_table = [['' for i in range(table_to_df.rows[0].cells.count)] for j in range(table_to_df.rows.count)]
 
         for y, row in enumerate(table_to_df.rows):
             for j, cell in enumerate(row.as_row().cells):
                 # print(cell.to_string(aw.SaveFormat.TEXT))
-                df[y][j] = cell.to_string(aw.SaveFormat.TEXT).replace("\r", "")
+                df_nested_table[y][j] = cell.to_string(aw.SaveFormat.TEXT).replace("\r", "")
 
-        data = pd.DataFrame(df)
+        data = pd.DataFrame(df_nested_table)
         print(data)
         return data
 
@@ -66,17 +66,44 @@ def extract_df_from_nested_table(table_to_check_in, row_index):
         print("pas de table")
 
 
+# Function pour récupérer le tableau d'information sur les items
+# Va permettre de mettre la ref client avec la ref lims pour les essais
+def get_items():
+    """
+    Function pour récupérer le tableau d'information sur les items
+    Va permettre de mettre la ref client avec la ref lims pour les essais
+    Le tableau d'items est toujours en position deux
+    :return: df avec le contenu du tableau
+    """
+    table_items = doc.get_child(aw.NodeType.TABLE, 1, True).as_table()
+    df_items = [['' for i in range(table_items.rows[0].cells.count)] for j in range(table_items.rows.count)]
+    for y, row in enumerate(table_items.rows):
+        for j, cell in enumerate(row.as_row().cells):
+            #print(cell.to_string(aw.SaveFormat.TEXT))
+            df_items[y][j] = cell.to_string(aw.SaveFormat.TEXT).replace("\r", "")
+
+    df_items = pd.DataFrame(df_items)
+    return df_items
+
+
+
 df = extract_df_from_nested_table(table_essais, 11)
 
 # Tous les tableaux ne vont pas etre traiter de la même maniere
 # cas des tableaux de chimie : On repere "Eléments à tester" en position 0,1
+# On fera une function pour manipuler et mettre en forme le dataframe avant de modifier les tableaux word
 print(df.iat[0, 1])
 if df.iat[0, 1] == 'Eléments à tester':
+    # On supprime la colonne Elements a tester
     df = df.drop(columns=1)
     # print(df.iloc[1:])
     # print(df.iloc[1:] =='')
     # print(df.loc[:,(df.iloc[1:] != '').any()])
+    # On supprime les colonnes ou pour toutes les lignes, il n'y a aucune valeur
     df = df.loc[:, (df.iloc[1:] != '').any()].reset_index(drop=True, )
     print(df)
 else:
     print("pas chimie")
+
+
+
